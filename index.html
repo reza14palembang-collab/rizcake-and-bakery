@@ -21,6 +21,7 @@
             --white: #FFFFFF;
             --gray: #666666;
             --light-gray: #F5F5F5;
+            --error-red: #ff6b6b;
         }
 
         * {
@@ -137,7 +138,7 @@
         }
 
         .login-error {
-            color: #ff4444;
+            color: var(--error-red);
             font-size: 0.9rem;
             text-align: center;
             display: none;
@@ -186,6 +187,26 @@
 
         .btn-primary:hover {
             background: var(--secondary-pink);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: var(--gray);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: #666666;
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
@@ -528,6 +549,25 @@
             cursor: pointer;
         }
 
+        /* Data Storage Info */
+        .data-storage-info {
+            background: var(--light-gray);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .data-storage-info h4 {
+            margin-bottom: 0.5rem;
+            color: var(--dark-brown);
+        }
+
+        .data-storage-info p {
+            margin-bottom: 1rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
         /* Footer */
         footer {
             background: var(--dark-brown);
@@ -599,6 +639,21 @@
 
         .admin-only.show {
             display: block;
+        }
+
+        /* Loading state */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--light-gray);
+            border-radius: 50%;
+            border-top-color: var(--primary-pink);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -922,6 +977,15 @@
                     </div>
                     <button type="submit" class="btn-primary">Simpan Perubahan</button>
                 </form>
+                
+                <!-- Data Storage Info -->
+                <div class="data-storage-info">
+                    <h4>💾 Data Storage</h4>
+                    <p>Data tersimpan otomatis di browser Anda. Untuk reset ke default, klik:</p>
+                    <button type="button" onclick="resetToDefault()" class="btn-secondary">
+                        Reset ke Default
+                    </button>
+                </div>
             </div>
 
             <!-- Contact Tab -->
@@ -961,7 +1025,7 @@
     <script>
         // Admin credentials - UPDATED PASSWORD
         const ADMIN_USERNAME = "RizcakeB";
-        const ADMIN_PASSWORD = "R.201020"; // ← PASSWORD BARU
+        const ADMIN_PASSWORD = "R.201020";
 
         // Login state
         let isAdminLoggedIn = false;
@@ -1009,7 +1073,67 @@
             }
         ];
 
-        // Sample product data
+        // ===== LOCALSTORAGE FUNCTIONS =====
+        
+        // Fungsi untuk menyimpan ke LocalStorage
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('rizcake_products', JSON.stringify(products));
+                localStorage.setItem('rizcake_content', JSON.stringify(contentData));
+                localStorage.setItem('rizcake_contact', JSON.stringify(contactData));
+                console.log('✅ Data tersimpan ke LocalStorage');
+            } catch (error) {
+                console.error('❌ Error saving to LocalStorage:', error);
+                alert('Gagal menyimpan data: ' + error.message);
+            }
+        }
+
+        // Fungsi untuk load dari LocalStorage
+        function loadFromLocalStorage() {
+            try {
+                // Load products
+                const savedProducts = localStorage.getItem('rizcake_products');
+                if (savedProducts) {
+                    products = JSON.parse(savedProducts);
+                    console.log('✅ Products loaded dari LocalStorage:', products.length, 'produk');
+                } else {
+                    console.log('ℹ️ Tidak ada produk tersimpan, menggunakan default');
+                }
+                
+                // Load content
+                const savedContent = localStorage.getItem('rizcake_content');
+                if (savedContent) {
+                    contentData = JSON.parse(savedContent);
+                    console.log('✅ Content loaded dari LocalStorage');
+                }
+                
+                // Load contact
+                const savedContact = localStorage.getItem('rizcake_contact');
+                if (savedContact) {
+                    contactData = JSON.parse(savedContact);
+                    console.log('✅ Contact loaded dari LocalStorage');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading from LocalStorage:', error);
+                alert('Gagal memuat data: ' + error.message);
+            }
+        }
+
+        // Fungsi untuk reset data (jika ingin kembali ke default)
+        function resetToDefault() {
+            if (confirm('⚠️ Apakah Anda yakin ingin reset ke data default? Semua perubahan akan hilang.')) {
+                localStorage.removeItem('rizcake_products');
+                localStorage.removeItem('rizcake_content');
+                localStorage.removeItem('rizcake_contact');
+                alert('✅ Data telah direset ke default. Refresh halaman untuk melihat perubahan.');
+                location.reload();
+            }
+        }
+
+        // ===== DEFAULT DATA =====
+        
+        // Default product data
         let products = [
             {
                 id: 1,
@@ -1058,7 +1182,7 @@
             }
         ];
 
-        // Content data
+        // Default content data
         let contentData = {
             logoText: "Rizcake and Bakery",
             heroTitle: "Rizcake and Bakery",
@@ -1069,7 +1193,7 @@
             aboutImage: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
         };
 
-        // Contact data
+        // Default contact data
         let contactData = {
             whatsapp: "+62 882-8655-8593",
             address: "Jl. Kue Manis No. 123, Jakarta Selatan",
@@ -1077,16 +1201,30 @@
             instagram: "@rizcakebakery"
         };
 
+        // ===== INITIALIZATION =====
+        
         // Initialize the website
         function init() {
+            console.log('=== Initializing Rizcake Website ===');
+            console.log('Loading data from LocalStorage...');
+            
+            // Load data dari LocalStorage dulu
+            loadFromLocalStorage();
+            
+            // Update tampilan
             loadFeaturedProducts();
             loadAllProducts();
             updateContentDisplay();
             updateContactDisplay();
             updateAdminUI();
+            
+            console.log('=== Initialization Complete ===');
+            console.log('Total products:', products.length);
+            console.log('Admin logged in:', isAdminLoggedIn);
         }
 
-        // Login functions
+        // ===== LOGIN FUNCTIONS =====
+        
         function showLoginModal() {
             document.getElementById('loginModal').style.display = 'flex';
             document.getElementById('loginError').style.display = 'none';
@@ -1109,8 +1247,10 @@
                 closeLoginModal();
                 showAdminPanel();
                 updateAdminUI();
+                console.log('✅ Login berhasil');
             } else {
                 document.getElementById('loginError').style.display = 'block';
+                console.log('❌ Login gagal');
             }
         }
 
@@ -1119,6 +1259,7 @@
             closeAdminPanel();
             updateAdminUI();
             showPage('home');
+            console.log('✅ Logout berhasil');
         }
 
         function updateAdminUI() {
@@ -1134,22 +1275,22 @@
             }
         }
 
-        // Show/hide pages
+        // ===== NAVIGATION FUNCTIONS =====
+        
         function showPage(pageId) {
             const pages = document.querySelectorAll('.page');
             pages.forEach(page => page.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             
-            // Close mobile menu if open
             document.getElementById('navMenu').classList.remove('active');
         }
 
-        // Toggle mobile menu
         function toggleMobileMenu() {
             document.getElementById('navMenu').classList.toggle('active');
         }
 
-        // Load featured products
+        // ===== PRODUCT FUNCTIONS =====
+        
         function loadFeaturedProducts() {
             const featuredContainer = document.getElementById('featuredProducts');
             const featuredProducts = products.filter(p => p.featured);
@@ -1164,9 +1305,10 @@
                     </div>
                 </div>
             `).join('');
+            
+            console.log('✅ Featured products loaded:', featuredProducts.length);
         }
 
-        // Load all products
         function loadAllProducts() {
             const allProductsContainer = document.getElementById('allProducts');
             
@@ -1180,21 +1322,19 @@
                     </div>
                 </div>
             `).join('');
+            
+            console.log('✅ All products loaded:', products.length);
         }
 
-        // Show product detail with size selection
         function showProductDetail(productId) {
             const product = products.find(p => p.id === productId);
             if (!product) return;
 
-            // Show size selection popup
+            currentProduct = product;
             showSizeSelectionPopup(product);
         }
 
-        // Show size selection popup
         function showSizeSelectionPopup(product) {
-            currentProduct = product;
-            
             const popupHTML = `
                 <div id="sizePopup" style="
                     position: fixed;
@@ -1254,19 +1394,15 @@
                 </div>
             `;
             
-            // Add popup to body
             document.body.insertAdjacentHTML('beforeend', popupHTML);
             
-            // Add click handlers to size options
             document.querySelectorAll('.size-option').forEach(option => {
                 option.addEventListener('click', function() {
-                    // Remove previous selection
                     document.querySelectorAll('.size-option').forEach(opt => {
                         opt.style.borderColor = 'var(--light-gray)';
                         opt.style.backgroundColor = 'var(--white)';
                     });
                     
-                    // Select current option
                     this.style.borderColor = 'var(--primary-pink)';
                     this.style.backgroundColor = 'rgba(255, 182, 193, 0.1)';
                     
@@ -1276,13 +1412,11 @@
                         name: this.dataset.name
                     };
                     
-                    // Enable confirm button
                     document.getElementById('confirmBtn').disabled = false;
                 });
             });
         }
 
-        // Close size popup
         function closeSizePopup() {
             const popup = document.getElementById('sizePopup');
             if (popup) popup.remove();
@@ -1290,13 +1424,11 @@
             selectedSize = null;
         }
 
-        // Confirm size selection with image sharing
         function confirmSizeSelection() {
             if (!selectedSize || !currentProduct) return;
             
-            // Create WhatsApp message with image link
             const message = `Halo Rizcake and Bakery!%0A%0A` +
-                `Saya ingin pesan:${currentProduct.name}%0A` +
+                `Saya ingin pesan: ${currentProduct.name}%0A` +
                 `Ukuran: ${selectedSize.name}%0A` +
                 `Harga: Rp ${selectedSize.price.toLocaleString()}%0A%0A` +
                 `Berikut gambar kue yang saya maksud:%0A` +
@@ -1310,30 +1442,59 @@
             closeSizePopup();
         }
 
-        // Update content display
+        // ===== CONTENT FUNCTIONS =====
+        
         function updateContentDisplay() {
-            document.getElementById('logoText').textContent = contentData.logoText;
-            document.getElementById('heroTitle').textContent = contentData.heroTitle;
-            document.getElementById('heroSubtitle').textContent = contentData.heroSubtitle;
-            document.getElementById('aboutTitle').textContent = contentData.aboutTitle;
-            document.getElementById('aboutText').textContent = contentData.aboutText;
-            document.getElementById('aboutTitlePage').textContent = contentData.aboutTitle;
-            document.getElementById('aboutTextPage').textContent = contentData.aboutText;
-            document.getElementById('aboutImage').src = contentData.aboutImage;
-            document.getElementById('aboutImagePage').src = contentData.aboutImage;
-            document.querySelector('.hero').style.backgroundImage = 
-                `linear-gradient(rgba(255, 182, 193, 0.3), rgba(255, 182, 193, 0.3)), url(${contentData.heroImage})`;
+            try {
+                console.log('🔄 Updating content display...');
+                
+                document.getElementById('logoText').textContent = contentData.logoText;
+                document.getElementById('heroTitle').textContent = contentData.heroTitle;
+                document.getElementById('heroSubtitle').textContent = contentData.heroSubtitle;
+                document.getElementById('aboutTitle').textContent = contentData.aboutTitle;
+                document.getElementById('aboutText').textContent = contentData.aboutText;
+                document.getElementById('aboutTitlePage').textContent = contentData.aboutTitle;
+                document.getElementById('aboutTextPage').textContent = contentData.aboutText;
+                
+                // Update images dengan cache busting
+                const aboutImage = document.getElementById('aboutImage');
+                const aboutImagePage = document.getElementById('aboutImagePage');
+                const heroElement = document.querySelector('.hero');
+                
+                if (aboutImage) {
+                    aboutImage.src = contentData.aboutImage + '?t=' + Date.now();
+                    console.log('✅ About image updated:', contentData.aboutImage);
+                }
+                
+                if (aboutImagePage) {
+                    aboutImagePage.src = contentData.aboutImage + '?t=' + Date.now();
+                }
+                
+                if (heroElement) {
+                    heroElement.style.backgroundImage = 
+                        `linear-gradient(rgba(255, 182, 193, 0.3), rgba(255, 182, 193, 0.3)), url(${contentData.heroImage}?t=${Date.now()})`;
+                    console.log('✅ Hero image updated:', contentData.heroImage);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error updating content display:', error);
+            }
         }
 
-        // Update contact display
+        // ===== CONTACT FUNCTIONS =====
+        
         function updateContactDisplay() {
-            document.getElementById('whatsappNumber').textContent = contactData.whatsapp;
-            document.getElementById('storeAddress').textContent = contactData.address;
-            document.getElementById('storeEmail').textContent = contactData.email;
-            document.getElementById('instagramHandle').textContent = contactData.instagram;
+            try {
+                document.getElementById('whatsappNumber').textContent = contactData.whatsapp;
+                document.getElementById('storeAddress').textContent = contactData.address;
+                document.getElementById('storeEmail').textContent = contactData.email;
+                document.getElementById('instagramHandle').textContent = contactData.instagram;
+                console.log('✅ Contact display updated');
+            } catch (error) {
+                console.error('❌ Error updating contact display:', error);
+            }
         }
 
-        // Handle contact form
         function handleContactForm(event) {
             event.preventDefault();
             const formData = new FormData(event.target);
@@ -1344,7 +1505,8 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // Admin panel functions
+        // ===== ADMIN PANEL FUNCTIONS =====
+        
         function showAdminPanel() {
             if (!isAdminLoggedIn) {
                 showLoginModal();
@@ -1354,6 +1516,7 @@
             loadAdminProductList();
             loadAdminContent();
             loadAdminContact();
+            console.log('✅ Admin panel opened');
         }
 
         function closeAdminPanel() {
@@ -1372,36 +1535,62 @@
         }
 
         function loadAdminProductList() {
-            const productList = document.getElementById('adminProductList');
-            productList.innerHTML = products.map(product => `
-                <div class="admin-product-item">
-                    <div>
-                        <strong>${product.name}</strong> - Rp ${product.price.toLocaleString()}
-                        ${product.featured ? '<span style="color: var(--primary-pink); margin-left: 10px;">⭐ Unggulan</span>' : ''}
+            try {
+                const productList = document.getElementById('adminProductList');
+                if (!productList) {
+                    console.error('❌ Admin product list element not found');
+                    return;
+                }
+                
+                productList.innerHTML = products.map(product => `
+                    <div class="admin-product-item">
+                        <div>
+                            <strong>${product.name}</strong> - Rp ${product.price.toLocaleString()}
+                            ${product.featured ? '<span style="color: var(--primary-pink); margin-left: 10px;">⭐ Unggulan</span>' : ''}
+                        </div>
+                        <div>
+                            <button onclick="editProduct(${product.id})" style="margin-right: 10px;">Edit</button>
+                            <button onclick="deleteProduct(${product.id})" style="background: #ff4444;">Hapus</button>
+                        </div>
                     </div>
-                    <div>
-                        <button onclick="editProduct(${product.id})" style="margin-right: 10px;">Edit</button>
-                        <button onclick="deleteProduct(${product.id})" style="background: #ff4444;">Hapus</button>
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+                
+                console.log('✅ Admin product list loaded:', products.length, 'products');
+                
+            } catch (error) {
+                console.error('❌ Error loading admin product list:', error);
+            }
         }
 
         function loadAdminContent() {
-            document.getElementById('adminLogoText').value = contentData.logoText;
-            document.getElementById('adminHeroTitle').value = contentData.heroTitle;
-            document.getElementById('adminHeroSubtitle').value = contentData.heroSubtitle;
-            document.getElementById('adminAboutTitle').value = contentData.aboutTitle;
-            document.getElementById('adminAboutText').value = contentData.aboutText;
-            document.getElementById('adminHeroImage').value = contentData.heroImage;
-            document.getElementById('adminAboutImage').value = contentData.aboutImage;
+            try {
+                document.getElementById('adminLogoText').value = contentData.logoText;
+                document.getElementById('adminHeroTitle').value = contentData.heroTitle;
+                document.getElementById('adminHeroSubtitle').value = contentData.heroSubtitle;
+                document.getElementById('adminAboutTitle').value = contentData.aboutTitle;
+                document.getElementById('adminAboutText').value = contentData.aboutText;
+                document.getElementById('adminHeroImage').value = contentData.heroImage;
+                document.getElementById('adminAboutImage').value = contentData.aboutImage;
+                
+                console.log('✅ Admin content loaded');
+                
+            } catch (error) {
+                console.error('❌ Error loading admin content:', error);
+            }
         }
 
         function loadAdminContact() {
-            document.getElementById('adminWhatsapp').value = contactData.whatsapp;
-            document.getElementById('adminAddress').value = contactData.address;
-            document.getElementById('adminEmail').value = contactData.email;
-            document.getElementById('adminInstagram').value = contactData.instagram;
+            try {
+                document.getElementById('adminWhatsapp').value = contactData.whatsapp;
+                document.getElementById('adminAddress').value = contactData.address;
+                document.getElementById('adminEmail').value = contactData.email;
+                document.getElementById('adminInstagram').value = contactData.instagram;
+                
+                console.log('✅ Admin contact loaded');
+                
+            } catch (error) {
+                console.error('❌ Error loading admin contact:', error);
+            }
         }
 
         function showAddProductForm() {
@@ -1412,26 +1601,78 @@
             document.getElementById('addProductForm').style.display = 'none';
         }
 
+        // ===== CRITICAL FUNCTION: ADD PRODUCT WITH LOCALSTORAGE =====
+        
         function addProduct(event) {
             event.preventDefault();
             
-            const newProduct = {
-                id: Date.now(),
-                name: document.getElementById('newProductName').value,
-                price: parseInt(document.getElementById('newProductPrice').value),
-                shortDescription: document.getElementById('newProductShortDesc').value,
-                longDescription: document.getElementById('newProductLongDesc').value,
-                image: document.getElementById('newProductImage').value,
-                featured: document.getElementById('newProductFeatured').value === 'true'
-            };
+            console.log('📝 Starting addProduct...');
             
-            products.push(newProduct);
-            loadFeaturedProducts();
-            loadAllProducts();
-            loadAdminProductList();
-            hideAddProductForm();
-            event.target.reset();
-            alert('Produk berhasil ditambahkan!');
+            try {
+                // Validasi input
+                const name = document.getElementById('newProductName').value.trim();
+                const price = parseInt(document.getElementById('newProductPrice').value);
+                const shortDesc = document.getElementById('newProductShortDesc').value.trim();
+                const longDesc = document.getElementById('newProductLongDesc').value.trim();
+                const image = document.getElementById('newProductImage').value.trim();
+                const featured = document.getElementById('newProductFeatured').value === 'true';
+                
+                console.log('Input data:', { name, price, shortDesc, longDesc, image, featured });
+                
+                // Validasi data
+                if (!name || !price || !shortDesc || !longDesc || !image) {
+                    alert('⚠️ Mohon lengkapi semua field!');
+                    return;
+                }
+                
+                if (isNaN(price) || price <= 0) {
+                    alert('⚠️ Harga harus angka positif!');
+                    return;
+                }
+                
+                // Buat produk baru
+                const newProduct = {
+                    id: Date.now(),
+                    name: name,
+                    price: price,
+                    shortDescription: shortDesc,
+                    longDescription: longDesc,
+                    image: image,
+                    featured: featured
+                };
+                
+                console.log('New product created:', newProduct);
+                
+                // Tambahkan ke array
+                products.push(newProduct);
+                console.log('Product added to array. Total products:', products.length);
+                
+                // Simpan ke LocalStorage - INI YANG PENTING!
+                saveToLocalStorage();
+                console.log('✅ Data saved to LocalStorage');
+                
+                // Reload tampilan
+                loadFeaturedProducts();
+                loadAllProducts();
+                loadAdminProductList();
+                
+                // Reset form
+                event.target.reset();
+                
+                // Tutup form
+                hideAddProductForm();
+                
+                // Success message
+                alert('✅ Produk berhasil ditambahkan dan disimpan!');
+                
+                // Debug: cek data di LocalStorage
+                const savedData = localStorage.getItem('rizcake_products');
+                console.log('LocalStorage verification:', savedData ? 'Data tersimpan' : 'Data tidak tersimpan');
+                
+            } catch (error) {
+                console.error('❌ Error adding product:', error);
+                alert('❌ Terjadi kesalahan: ' + error.message);
+            }
         }
 
         function editProduct(productId) {
@@ -1462,51 +1703,90 @@
             product.image = newImage;
             product.featured = newFeatured;
             
+            // Simpan perubahan ke LocalStorage
+            saveToLocalStorage();
+            
             loadFeaturedProducts();
             loadAllProducts();
             loadAdminProductList();
-            alert('Produk berhasil diupdate!');
+            
+            alert('✅ Produk berhasil diupdate!');
         }
 
         function deleteProduct(productId) {
-            if (!confirm('Apakah Anda yakin ingin menghapus produk ini?')) return;
+            if (!confirm('⚠️ Apakah Anda yakin ingin menghapus produk ini?')) return;
             
             products = products.filter(p => p.id !== productId);
+            
+            // Simpan perubahan ke LocalStorage
+            saveToLocalStorage();
+            
             loadFeaturedProducts();
             loadAllProducts();
             loadAdminProductList();
-            alert('Produk berhasil dihapus!');
+            
+            alert('✅ Produk berhasil dihapus!');
         }
 
+        // ===== ADMIN UPDATE FUNCTIONS WITH LOCALSTORAGE =====
+        
         function updateContent(event) {
             event.preventDefault();
             
-            contentData.logoText = document.getElementById('adminLogoText').value;
-            contentData.heroTitle = document.getElementById('adminHeroTitle').value;
-            contentData.heroSubtitle = document.getElementById('adminHeroSubtitle').value;
-            contentData.aboutTitle = document.getElementById('adminAboutTitle').value;
-            contentData.aboutText = document.getElementById('adminAboutText').value;
-            contentData.heroImage = document.getElementById('adminHeroImage').value;
-            contentData.aboutImage = document.getElementById('adminAboutImage').value;
-            
-            updateContentDisplay();
-            alert('Konten berhasil diupdate!');
+            try {
+                contentData.logoText = document.getElementById('adminLogoText').value;
+                contentData.heroTitle = document.getElementById('adminHeroTitle').value;
+                contentData.heroSubtitle = document.getElementById('adminHeroSubtitle').value;
+                contentData.aboutTitle = document.getElementById('adminAboutTitle').value;
+                contentData.aboutText = document.getElementById('adminAboutText').value;
+                contentData.heroImage = document.getElementById('adminHeroImage').value;
+                contentData.aboutImage = document.getElementById('adminAboutImage').value;
+                
+                // Simpan ke LocalStorage
+                saveToLocalStorage();
+                
+                // Update tampilan
+                updateContentDisplay();
+                
+                alert('✅ Konten berhasil diupdate dan disimpan!');
+                
+            } catch (error) {
+                console.error('❌ Error updating content:', error);
+                alert('❌ Terjadi kesalahan: ' + error.message);
+            }
         }
 
         function updateContact(event) {
             event.preventDefault();
             
-            contactData.whatsapp = document.getElementById('adminWhatsapp').value;
-            contactData.address = document.getElementById('adminAddress').value;
-            contactData.email = document.getElementById('adminEmail').value;
-            contactData.instagram = document.getElementById('adminInstagram').value;
-            
-            updateContactDisplay();
-            alert('Kontak berhasil diupdate!');
+            try {
+                contactData.whatsapp = document.getElementById('adminWhatsapp').value;
+                contactData.address = document.getElementById('adminAddress').value;
+                contactData.email = document.getElementById('adminEmail').value;
+                contactData.instagram = document.getElementById('adminInstagram').value;
+                
+                // Simpan ke LocalStorage
+                saveToLocalStorage();
+                
+                // Update tampilan
+                updateContactDisplay();
+                
+                alert('✅ Kontak berhasil diupdate dan disimpan!');
+                
+            } catch (error) {
+                console.error('❌ Error updating contact:', error);
+                alert('❌ Terjadi kesalahan: ' + error.message);
+            }
         }
 
+        // ===== INITIALIZATION =====
+        
         // Initialize the website when page loads
-        window.onload = init;
+        window.onload = function() {
+            console.log('🚀 Starting Rizcake and Bakery Website...');
+            console.log('💾 Using LocalStorage for data persistence');
+            init();
+        };
     </script>
 </body>
 </html>
